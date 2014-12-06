@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Mapinator</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="dialog_message">Edit marker options</string>
+    <string name="okey">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="action_add">Add marker</string>
+    <string name="action_recv">Receive instructions</string>
+    <string name="action_showmarkers">Show markers</string>
+    <string name="action_clear">Clear map</string>
+    <string name="action_settings">Settings</string>
+
+</resources>
