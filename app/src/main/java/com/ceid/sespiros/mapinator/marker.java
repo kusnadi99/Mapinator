@@ -5,10 +5,10 @@ import android.provider.BaseColumns;
 /**
  * Created by sespiros on 6/12/2014.
  */
-public class Marker {
+public class marker {
     // To prevent someone from accidentally instantiating the contract class,
     // give it an empty constructor.
-    public Marker() {}
+    public marker() {}
 
     /* Inner class that defines the table contents */
     public static abstract class MarkerEntry implements BaseColumns {

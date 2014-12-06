@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.ceid.sespiros.mapinator.MarkerDbHelper;
+import com.ceid.sespiros.mapinator.marker;
 
 /**
  * Created by sespiros on 6/12/2014.
@@ -12,18 +13,18 @@ import com.ceid.sespiros.mapinator.MarkerDbHelper;
 public class MarkerDbHelper extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "Marker.db";
+    public static final String DATABASE_NAME = "Mapinator.db";
     private static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + Marker.MarkerEntry.TABLE_NAME + " (" +
-                    Marker.MarkerEntry._ID + " INTEGER PRIMARY KEY," +
-                    Marker.MarkerEntry.COLUMN_NAME_TITLE + " TEXT," +
-                    Marker.MarkerEntry.COLUMN_NAME_DESC + " TEXT," +
-                    Marker.MarkerEntry.COLUMN_NAME_CATEGORY + " TEXT," +
-                    Marker.MarkerEntry.COLUMN_NAME_LATITUDE + " TEXT," +
-                    Marker.MarkerEntry.COLUMN_NAME_LONGITUDE + " TEXT )";
+            "CREATE TABLE " + marker.MarkerEntry.TABLE_NAME + " (" +
+                    marker.MarkerEntry._ID + " INTEGER PRIMARY KEY," +
+                    marker.MarkerEntry.COLUMN_NAME_TITLE + " TEXT," +
+                    marker.MarkerEntry.COLUMN_NAME_DESC + " TEXT," +
+                    marker.MarkerEntry.COLUMN_NAME_CATEGORY + " TEXT," +
+                    marker.MarkerEntry.COLUMN_NAME_LATITUDE + " TEXT," +
+                    marker.MarkerEntry.COLUMN_NAME_LONGITUDE + " TEXT )";
 
     private static final String SQL_DELETE_ENTRIES =
-            "DROP TABLE IF EXISTS " + Marker.MarkerEntry.TABLE_NAME;
+            "DROP TABLE IF EXISTS " + marker.MarkerEntry.TABLE_NAME;
 
     public MarkerDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

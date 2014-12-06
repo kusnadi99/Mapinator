@@ -8,6 +8,7 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,22 +34,22 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.ceid.sespiros.mapinator.markerInfo;
+import com.ceid.sespiros.mapinator.marker;
 
 public class MainActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private MapFragment mMapFragment;
-    private DialogFragment editDialog = new markerInfo();
+    private DialogFragment editDialog;
     private DialogFragment dialog = new markerOptions();
-    private SQLiteDatabase db;
-    private MarkerDbHelper mDbHelper;
+    MarkerDbHelper mDbHelper;
+    SQLiteDatabase db;
+    Cursor c;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mDbHelper = new MarkerDbHelper(getApplicationContext());
-        db = mDbHelper.getWritableDatabase();
 
         setUpMapIfNeeded();
     }
@@ -116,13 +117,22 @@ public class MainActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
+        mDbHelper = new MarkerDbHelper(this);
+        db = mDbHelper.getReadableDatabase();
+
+        c = db.query(marker.MarkerEntry.TABLE_NAME, new String[] {"_id", "title"},
+                "_id = 0", null, null, null, null);
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
+                editDialog = markerInfo.newInstance(latLng);
                 editDialog.show(getFragmentManager(), "edit");
 
+                String favourite = "de doulevi akoma";//c.getString(c.getColumnIndex("category"));
+
                 Marker info = mMap.addMarker(new MarkerOptions().position(latLng)
-                        .title("Favourite").snippet("Click to edit"));
+                        .title(favourite).snippet("Click to edit"));
 
                 info.showInfoWindow();
             }
