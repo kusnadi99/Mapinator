@@ -16,6 +16,9 @@ public class MarkerDbHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + Marker.MarkerEntry.TABLE_NAME + " (" +
                     Marker.MarkerEntry._ID + " INTEGER PRIMARY KEY," +
+                    Marker.MarkerEntry.COLUMN_NAME_TITLE + " TEXT," +
+                    Marker.MarkerEntry.COLUMN_NAME_DESC + " TEXT," +
+                    Marker.MarkerEntry.COLUMN_NAME_CATEGORY + " TEXT," +
                     Marker.MarkerEntry.COLUMN_NAME_LATITUDE + " TEXT," +
                     Marker.MarkerEntry.COLUMN_NAME_LONGITUDE + " TEXT )";
 

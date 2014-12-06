@@ -13,7 +13,11 @@ public class Marker {
     /* Inner class that defines the table contents */
     public static abstract class MarkerEntry implements BaseColumns {
         public static final String TABLE_NAME = "markers";
+        public static final String COLUMN_NAME_TITLE = "title";
+        public static final String COLUMN_NAME_DESC = "description";
+        public static final String COLUMN_NAME_CATEGORY = "category";
         public static final String COLUMN_NAME_LATITUDE = "latitude";
         public static final String COLUMN_NAME_LONGITUDE = "longitude";
+
     }
 }

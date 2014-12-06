@@ -20,7 +20,9 @@ import android.os.Build;
 
 import android.support.v4.app.FragmentActivity;
 import android.webkit.WebView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -36,7 +38,8 @@ public class MainActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private MapFragment mMapFragment;
-    private DialogFragment dialog = new markerInfo();
+    private DialogFragment editDialog = new markerInfo();
+    private DialogFragment dialog = new markerOptions();
     private SQLiteDatabase db;
     private MarkerDbHelper mDbHelper;
 
@@ -46,6 +49,7 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         mDbHelper = new MarkerDbHelper(getApplicationContext());
         db = mDbHelper.getWritableDatabase();
+
         setUpMapIfNeeded();
     }
 
@@ -115,8 +119,11 @@ public class MainActivity extends FragmentActivity {
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
+                editDialog.show(getFragmentManager(), "edit");
+
                 Marker info = mMap.addMarker(new MarkerOptions().position(latLng)
                         .title("Favourite").snippet("Click to edit"));
+
                 info.showInfoWindow();
             }
         });
@@ -124,7 +131,7 @@ public class MainActivity extends FragmentActivity {
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                dialog.show(getFragmentManager(), "edit");
+                dialog.show(getFragmentManager(), "options");
             }
         });
     }
