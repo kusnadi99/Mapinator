@@ -41,15 +41,18 @@ public class MainActivity extends FragmentActivity {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private MapFragment mMapFragment;
     private DialogFragment editDialog;
-    private DialogFragment dialog = new markerOptions();
+    private DialogFragment dialog;
     MarkerDbHelper mDbHelper;
     SQLiteDatabase db;
-    Cursor c;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Get a handle on the database maybe needed in resume etc
+        mDbHelper = new MarkerDbHelper(this);
+        db = mDbHelper.getReadableDatabase();
 
         setUpMapIfNeeded();
     }
@@ -117,22 +120,32 @@ public class MainActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mDbHelper = new MarkerDbHelper(this);
-        db = mDbHelper.getReadableDatabase();
+        /* if press the button */
+        Cursor c;
+        c = mDbHelper.getMarkers(db);
 
-        c = db.query(marker.MarkerEntry.TABLE_NAME, new String[] {"_id", "title"},
-                "_id = 0", null, null, null, null);
+        c.moveToFirst();
+        while(!c.isAfterLast()) {
+            mMap.addMarker(markerToMarkerOptions(c));
+            c.moveToNext();
+        }
+        /*
+        -------------------------------------------------
+         */
 
+        // When click spawn an edit dialog and create a new marker
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
                 editDialog = markerInfo.newInstance(latLng);
                 editDialog.show(getFragmentManager(), "edit");
 
-                String favourite = "de doulevi akoma";//c.getString(c.getColumnIndex("category"));
+                String title = editDialog.getArguments().getString("Title");
+                String desc = editDialog.getArguments().getString("Description");
+                String category = editDialog.getArguments().getString("Category");
 
                 Marker info = mMap.addMarker(new MarkerOptions().position(latLng)
-                        .title(favourite).snippet("Click to edit"));
+                        .title(title).snippet(desc+category+"Click to edit"));
 
                 info.showInfoWindow();
             }
@@ -144,5 +157,21 @@ public class MainActivity extends FragmentActivity {
                 dialog.show(getFragmentManager(), "options");
             }
         });
+    }
+
+    private MarkerOptions markerToMarkerOptions(Cursor c) {
+        marker mark = new marker();
+        LatLng latlng = new LatLng(c.getDouble(4), c.getDouble(5));
+        Log.d("DEBUG",latlng.toString());
+        String title = c.getString(1);
+        String description = c.getString(2);
+        String category = c.getString(3);
+        String snippet = title + description + category + "Click to edit";
+
+        mark.setTitle(title);
+        mark.setDescription(description);
+        mark.setCategory(category);
+        mark.setCoordinates(latlng);
+        return new MarkerOptions().position(latlng).title(title).snippet(snippet);
     }
 }

@@ -25,8 +25,7 @@ public class markerInfo extends DialogFragment {
     SQLiteDatabase db;
     MarkerDbHelper mDbHelper;
     LatLng latlng;
-    EditText title, desc;
-    Spinner category;
+    String title, desc, category;
     View layout;
 
     /**
@@ -72,17 +71,26 @@ public class markerInfo extends DialogFragment {
                         // Gets the data repository in write mode
                         db = mDbHelper.getWritableDatabase();
 
-                        title = (EditText) layout.findViewById(R.id.editTitle);
-                        desc = (EditText) layout.findViewById(R.id.editDescription);
-                        category = (Spinner) layout.findViewById(R.id.spinner);
-                        Log.d("debug", desc.getText().toString());
+                        title = ((EditText) layout.findViewById(R.id.editTitle))
+                                .getText().toString();
+                        desc = ((EditText) layout.findViewById(R.id.editDescription))
+                                .getText().toString();
+                        category = ((Spinner) layout.findViewById(R.id.spinner))
+                                 .getSelectedItem().toString();
                         // Create a new map of values, where column names are the keys
                         ContentValues values = new ContentValues();
-                        values.put(marker.MarkerEntry.COLUMN_NAME_TITLE, title.getText().toString());
-                        values.put(marker.MarkerEntry.COLUMN_NAME_DESC, desc.getText().toString());
-                        values.put(marker.MarkerEntry.COLUMN_NAME_CATEGORY, category.getSelectedItem().toString());
+                        values.put(marker.MarkerEntry.COLUMN_NAME_TITLE, title);
+                        values.put(marker.MarkerEntry.COLUMN_NAME_DESC, desc);
+                        values.put(marker.MarkerEntry.COLUMN_NAME_CATEGORY, category);
                         values.put(marker.MarkerEntry.COLUMN_NAME_LATITUDE, latlng.latitude);
                         values.put(marker.MarkerEntry.COLUMN_NAME_LONGITUDE, latlng.longitude);
+
+                        // Supply num input as an argument.
+                        Bundle args = new Bundle();
+                        args.putString("Title", title);
+                        args.putString("Description", desc);
+                        args.putString("Category", category);
+                        setArguments(args);
 
                         // Insert the new row, returning the primary key value of the new row
                         long newRowId;
