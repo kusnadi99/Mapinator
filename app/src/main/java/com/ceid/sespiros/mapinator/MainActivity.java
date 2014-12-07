@@ -78,11 +78,13 @@ public class MainActivity extends FragmentActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_showmarkers:
+                showMarkers();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -121,14 +123,7 @@ public class MainActivity extends FragmentActivity {
      */
     private void setUpMap() {
         /* if press the button */
-        Cursor c;
-        c = mDbHelper.getMarkers(db);
 
-        c.moveToFirst();
-        while(!c.isAfterLast()) {
-            mMap.addMarker(markerToMarkerOptions(c));
-            c.moveToNext();
-        }
         /*
         -------------------------------------------------
          */
@@ -173,5 +168,16 @@ public class MainActivity extends FragmentActivity {
         mark.setCategory(category);
         mark.setCoordinates(latlng);
         return new MarkerOptions().position(latlng).title(title).snippet(snippet);
+    }
+
+    private void showMarkers(GoogleMap mMap) {
+        Cursor c;
+        c = mDbHelper.getMarkers(db);
+
+        c.moveToFirst();
+        while(!c.isAfterLast()) {
+            mMap.addMarker(markerToMarkerOptions(c));
+            c.moveToNext();
+        }
     }
 }
