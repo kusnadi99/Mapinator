@@ -1,30 +1,17 @@
 package com.ceid.sespiros.mapinator;
 
-import android.app.Activity;
-import android.app.ActionBar;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
-import android.content.DialogInterface;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
 
 import android.support.v4.app.FragmentActivity;
-import android.webkit.WebView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -33,13 +20,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.ceid.sespiros.mapinator.markerInfo;
-import com.ceid.sespiros.mapinator.marker;
-
 public class MainActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private MapFragment mMapFragment;
     private DialogFragment editDialog;
     private DialogFragment dialog;
     MarkerDbHelper mDbHelper;
@@ -122,33 +105,19 @@ public class MainActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        /* if press the button */
-
-        /*
-        -------------------------------------------------
-         */
-
         // When click spawn an edit dialog and create a new marker
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
-            public void onMapClick(LatLng latLng) {
-                editDialog = markerInfo.newInstance(latLng);
+            public void onMapClick(LatLng latlng) {
+                editDialog = MarkerInfo.newInstance(latlng);
                 editDialog.show(getFragmentManager(), "edit");
-
-                String title = editDialog.getArguments().getString("Title");
-                String desc = editDialog.getArguments().getString("Description");
-                String category = editDialog.getArguments().getString("Category");
-
-                Marker info = mMap.addMarker(new MarkerOptions().position(latLng)
-                        .title(title).snippet(desc+category+"Click to edit"));
-
-                info.showInfoWindow();
             }
         });
 
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
+                dialog = new markerOptions();
                 dialog.show(getFragmentManager(), "options");
             }
         });
@@ -167,10 +136,11 @@ public class MainActivity extends FragmentActivity {
         mark.setDescription(description);
         mark.setCategory(category);
         mark.setCoordinates(latlng);
+
         return new MarkerOptions().position(latlng).title(title).snippet(snippet);
     }
 
-    private void showMarkers(GoogleMap mMap) {
+    private void showMarkers() {
         Cursor c;
         c = mDbHelper.getMarkers(db);
 
@@ -179,5 +149,27 @@ public class MainActivity extends FragmentActivity {
             mMap.addMarker(markerToMarkerOptions(c));
             c.moveToNext();
         }
+    }
+
+    void doPositiveClick(String title, String desc, String category, LatLng latlng) {
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(marker.MarkerEntry.COLUMN_NAME_TITLE, title);
+        values.put(marker.MarkerEntry.COLUMN_NAME_DESC, desc);
+        values.put(marker.MarkerEntry.COLUMN_NAME_CATEGORY, category);
+        values.put(marker.MarkerEntry.COLUMN_NAME_LATITUDE, latlng.latitude);
+        values.put(marker.MarkerEntry.COLUMN_NAME_LONGITUDE, latlng.longitude);
+
+        // Insert the new row, returning the primary key value of the new row
+        long newRowId;
+        newRowId = db.insert(
+                marker.MarkerEntry.TABLE_NAME,
+                null,
+                values);
+
+        Marker info = mMap.addMarker(new MarkerOptions().position(latlng)
+                .title(title).snippet(desc+category+"Click to edit"));
+
+        info.showInfoWindow();
     }
 }

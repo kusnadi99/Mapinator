@@ -1,14 +1,10 @@
 package com.ceid.sespiros.mapinator;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.ContentValues;
 import android.content.DialogInterface;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -16,14 +12,11 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.ceid.sespiros.mapinator.marker;
 
 /**
  * Created by sespiros on 6/12/2014.
  */
-public class markerInfo extends DialogFragment {
-    SQLiteDatabase db;
-    MarkerDbHelper mDbHelper;
+public class MarkerInfo extends DialogFragment {
     LatLng latlng;
     String title, desc, category;
     View layout;
@@ -32,8 +25,8 @@ public class markerInfo extends DialogFragment {
      * Create a new instance of markerInfo, providing "latlng"
      * as an argument.
      */
-    static markerInfo newInstance(LatLng latlng) {
-        markerInfo f = new markerInfo();
+    public static MarkerInfo newInstance(LatLng latlng) {
+        MarkerInfo f = new MarkerInfo();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
@@ -60,44 +53,19 @@ public class markerInfo extends DialogFragment {
         // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
 
-        mDbHelper = new MarkerDbHelper(getActivity());
-        latlng = getArguments().getParcelable("latlng");
-
-        builder.setMessage(R.string.dialog_message)
+        builder.setTitle(R.string.dialog_title)
                 .setView(layout)
                 .setPositiveButton(R.string.okey, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-
-                        // Gets the data repository in write mode
-                        db = mDbHelper.getWritableDatabase();
-
                         title = ((EditText) layout.findViewById(R.id.editTitle))
                                 .getText().toString();
                         desc = ((EditText) layout.findViewById(R.id.editDescription))
                                 .getText().toString();
                         category = ((Spinner) layout.findViewById(R.id.spinner))
-                                 .getSelectedItem().toString();
-                        // Create a new map of values, where column names are the keys
-                        ContentValues values = new ContentValues();
-                        values.put(marker.MarkerEntry.COLUMN_NAME_TITLE, title);
-                        values.put(marker.MarkerEntry.COLUMN_NAME_DESC, desc);
-                        values.put(marker.MarkerEntry.COLUMN_NAME_CATEGORY, category);
-                        values.put(marker.MarkerEntry.COLUMN_NAME_LATITUDE, latlng.latitude);
-                        values.put(marker.MarkerEntry.COLUMN_NAME_LONGITUDE, latlng.longitude);
+                                .getSelectedItem().toString();
+                        latlng = getArguments().getParcelable("latlng");
 
-                        // Supply num input as an argument.
-                        Bundle args = new Bundle();
-                        args.putString("Title", title);
-                        args.putString("Description", desc);
-                        args.putString("Category", category);
-                        setArguments(args);
-
-                        // Insert the new row, returning the primary key value of the new row
-                        long newRowId;
-                        newRowId = db.insert(
-                                marker.MarkerEntry.TABLE_NAME,
-                                null,
-                                values);
+                        ((MainActivity)getActivity()).doPositiveClick(title, desc, category, latlng);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -109,4 +77,5 @@ public class markerInfo extends DialogFragment {
         // Create the AlertDialog object and return it
         return builder.create();
     }
+
 }

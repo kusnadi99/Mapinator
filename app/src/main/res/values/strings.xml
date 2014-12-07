@@ -3,7 +3,7 @@
 
     <string name="app_name">Mapinator</string>
     <string name="hello_world">Hello world!</string>
-    <string name="dialog_message">Edit marker options</string>
+    <string name="dialog_title">Edit marker options</string>
     <string name="okey">OK</string>
     <string name="cancel">Cancel</string>
     <string name="action_add">Add marker</string>
