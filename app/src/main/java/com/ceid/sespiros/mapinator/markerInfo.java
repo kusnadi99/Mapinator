@@ -16,7 +16,7 @@ import com.google.android.gms.maps.model.LatLng;
 /**
  * Created by sespiros on 6/12/2014.
  */
-public class MarkerInfo extends DialogFragment {
+public class markerInfo extends DialogFragment {
     LatLng latlng;
     String title, desc, category;
     View layout;
@@ -25,8 +25,8 @@ public class MarkerInfo extends DialogFragment {
      * Create a new instance of markerInfo, providing "latlng"
      * as an argument.
      */
-    public static MarkerInfo newInstance(LatLng latlng) {
-        MarkerInfo f = new MarkerInfo();
+    public static markerInfo newInstance(LatLng latlng) {
+        markerInfo f = new markerInfo();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();

@@ -19,13 +19,12 @@ public class markerOptions extends DialogFragment {
      * Create a new instance of markerInfo, providing "title"
      * as an argument.
      */
-    public static markerOptions newInstance(Marker marker) {
+    public static markerOptions newInstance(LatLng latlng) {
         markerOptions f = new markerOptions();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
-        args.put
-        args.putParcelable("marker", marker);
+        args.putParcelable("latlng", latlng);
         f.setArguments(args);
 
         return f;

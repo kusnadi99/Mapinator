@@ -71,7 +71,6 @@ public class MainActivity extends FragmentActivity {
                 return true;
             case R.id.action_clear:
                 mMap.clear();
-                mDbHelper.deleteAll(db);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -124,7 +123,7 @@ public class MainActivity extends FragmentActivity {
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                dialog = markerOptions.newInstance(marker);
+                dialog = markerOptions.newInstance(marker.getPosition());
                 dialog.show(getFragmentManager(), "options");
             }
         });
@@ -160,7 +159,7 @@ public class MainActivity extends FragmentActivity {
 
     void editMarker(LatLng latlng) {
         if (addEnabled) {
-            editDialog = MarkerInfo.newInstance(latlng);
+            editDialog = markerInfo.newInstance(latlng);
             editDialog.show(getFragmentManager(), "edit");
             addEnabled = false;
         }
