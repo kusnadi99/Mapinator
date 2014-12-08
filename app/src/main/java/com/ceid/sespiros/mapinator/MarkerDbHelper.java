@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.ceid.sespiros.mapinator.MarkerDbHelper;
 import com.ceid.sespiros.mapinator.marker;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
 /**
@@ -60,5 +61,21 @@ public class MarkerDbHelper extends SQLiteOpenHelper {
                 allColumns,
                 null, null, null, null, null);
 
+    }
+
+    /* Currently same as onUpgrade */
+    public void deleteAll(SQLiteDatabase db) {
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);
+    }
+
+    public int deleteMarker(SQLiteDatabase db, LatLng latlng) {
+        String lat = String.valueOf(latlng.latitude);
+        String lng = String.valueOf(latlng.longitude);
+        String whereArgs[] = new String[] {lat, lng};
+        int count = db.delete(marker.MarkerEntry.TABLE_NAME,
+                marker.MarkerEntry.COLUMN_NAME_LATITUDE + "=? AND " + marker.MarkerEntry.COLUMN_NAME_LONGITUDE + "=?", whereArgs);
+
+        return count;
     }
 }

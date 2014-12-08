@@ -10,11 +10,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import android.support.v4.app.FragmentActivity;
-import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -27,6 +25,7 @@ public class MainActivity extends FragmentActivity {
     private DialogFragment dialog;
     MarkerDbHelper mDbHelper;
     SQLiteDatabase db;
+    boolean addEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +63,15 @@ public class MainActivity extends FragmentActivity {
         switch (id) {
             case R.id.action_showmarkers:
                 showMarkers();
+                return true;
+            case R.id.action_add:
+                addEnabled = true;
+                Toast toast = Toast.makeText(getApplicationContext(), "Click to add a marker", Toast.LENGTH_LONG);
+                toast.show();
+                return true;
+            case R.id.action_clear:
+                mMap.clear();
+                mDbHelper.deleteAll(db);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -109,15 +117,14 @@ public class MainActivity extends FragmentActivity {
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latlng) {
-                editDialog = MarkerInfo.newInstance(latlng);
-                editDialog.show(getFragmentManager(), "edit");
+                editMarker(latlng);
             }
         });
 
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                dialog = new markerOptions();
+                dialog = markerOptions.newInstance(marker);
                 dialog.show(getFragmentManager(), "options");
             }
         });
@@ -151,6 +158,21 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    void editMarker(LatLng latlng) {
+        if (addEnabled) {
+            editDialog = MarkerInfo.newInstance(latlng);
+            editDialog.show(getFragmentManager(), "edit");
+            addEnabled = false;
+        }
+    }
+
+    void deleteMarker(LatLng latlng) {
+        if( mDbHelper.deleteMarker(db, latlng) > 0) {
+            Toast toast = Toast.makeText(getApplicationContext(), "Marker deleted successfully", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
     void doPositiveClick(String title, String desc, String category, LatLng latlng) {
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
@@ -172,4 +194,5 @@ public class MainActivity extends FragmentActivity {
 
         info.showInfoWindow();
     }
+
 }
