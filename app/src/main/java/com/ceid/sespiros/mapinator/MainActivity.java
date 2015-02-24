@@ -260,11 +260,16 @@ public class MainActivity extends FragmentActivity {
     }
 
     void editMarker(LatLng latlng) {
-        if (!addEnabled) {
+        if (addEnabled) {
             editDialog = markerInfo.newInstance(latlng);
             editDialog.show(getFragmentManager(), "edit");
             addEnabled = false;
         }
+    }
+
+    void editCurrentMarker(LatLng latlng) {
+        editDialog = markerInfo.newInstance(latlng);
+        editDialog.show(getFragmentManager(), "edit");
     }
 
     void deleteMarker(LatLng latlng) {

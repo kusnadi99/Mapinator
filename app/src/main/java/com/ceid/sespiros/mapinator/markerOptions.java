@@ -46,7 +46,7 @@ public class markerOptions extends DialogFragment {
                         ((MainActivity)getActivity()).deleteMarker(latlng);
                         break;
                     case 1: // edit
-                        ((MainActivity)getActivity()).editMarker(latlng);
+                        ((MainActivity)getActivity()).editCurrentMarker(latlng);
                         break;
                     case 2: // receive instructions
                         break;
