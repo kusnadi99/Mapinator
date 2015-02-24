@@ -2,9 +2,13 @@ package com.ceid.sespiros.mapinator;
 
 import android.app.DialogFragment;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Address;
+import android.location.Geocoder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -19,6 +23,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
 import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
 public class MainActivity extends FragmentActivity {
 
@@ -135,6 +144,90 @@ public class MainActivity extends FragmentActivity {
                 dialog.show(getFragmentManager(), "options");
             }
         });
+
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latlng) {
+                getAddress(latlng);
+            }
+        });
+    }
+
+    public void getAddress(LatLng point) {
+        /*
+         * Reverse geocoding is long-running and synchronous.
+         * Run it on a background thread.
+         * Pass the current location to the background task.
+         * When the task finishes,
+         * onPostExecute() displays the address.
+         */
+
+        (new GetAddressTask(this)).execute(point);
+    }
+
+    private class GetAddressTask extends AsyncTask<LatLng, Void, String> {
+        Context mContext;
+
+        public GetAddressTask(Context context) {
+            super();
+            mContext = context;
+        }
+
+        /**
+         * Get a Geocoder instance, get the latitude and longitude
+         * look up the address, and return it
+         *
+         * @return A string containing the address of the current
+         * location, or an empty string if no address can be found,
+         * or an error message
+         * @params params One or more Location objects
+         */
+        @Override
+        protected String doInBackground(LatLng... params) {
+            Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
+
+            // Get the current location from the input parameter list
+            // Create a list to contain the result address
+            List<Address> addresses = null;
+            try {
+                addresses = geocoder.getFromLocation(params[0].latitude, params[0].longitude, 1);
+            } catch (IOException e1) {
+                Log.e("LocationSampleActivity", "IO Exception in getFromLocation()");
+                e1.printStackTrace();
+                return ("IO Exception trying to get address");
+            } catch (IllegalArgumentException e2) {
+                // Error message to post in the log
+                String errorString = "Illegal arguments " + Double.toString(params[0].latitude) +
+                        " , " + Double.toString(params[0].longitude) + " passed to address service";
+                Log.e("LocationSampleActivity", errorString);
+                e2.printStackTrace();
+                return errorString;
+            }
+            // If the reverse geocode returned an address
+            if (addresses != null && addresses.size() > 0) {
+                // Get the first address
+                Address address = addresses.get(0);
+                /*
+                 * Format the first line of address (if available),
+                 * city, and country name.
+                 */
+                String addressText = String.format(
+                        "%s, %s, %s",
+                        address.getMaxAddressLineIndex() > 0 ? address.getAddressLine(0) : "",
+                        address.getLocality(),
+                        address.getCountryName());
+                // Return the text
+                return addressText;
+            } else {
+                return "No address found";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String address) {
+            // Display the results of the lookup.
+            Toast.makeText(getApplicationContext(), address, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private MarkerOptions markerToMarkerOptions(Cursor c) {
