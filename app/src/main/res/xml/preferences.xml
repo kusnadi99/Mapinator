@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+
+        android:title="First Category"
+
+        android:key="first_category">
+
+        <ListPreference
+            android:key="lang"
+            android:title="Language"
+            android:summary="Change Instruction language"
+            android:defaultValue="en"
+            android:entries="@array/lang"
+            android:entryValues="@array/langValues"
+        />
+
+        <ListPreference
+            android:key="units"
+            android:title="Units"
+            android:summary="Choose preferred unit"
+            android:defaultValue="km"
+            android:entries="@array/units"
+            android:entryValues="@array/unitsValues"
+        />
+    </PreferenceCategory>
+
+</PreferenceScreen>

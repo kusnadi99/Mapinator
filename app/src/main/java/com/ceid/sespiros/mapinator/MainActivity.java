@@ -2,6 +2,7 @@ package com.ceid.sespiros.mapinator;
 
 import android.app.DialogFragment;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -75,6 +76,9 @@ public class MainActivity extends FragmentActivity {
                 mMap.clear();
                 return true;
             case R.id.action_settings:
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, SetPreferenceActivity.class);
+                startActivityForResult(intent, 0);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

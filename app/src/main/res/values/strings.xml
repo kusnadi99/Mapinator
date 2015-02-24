@@ -28,4 +28,22 @@
         <item>Blue</item>
         <item>Azure</item>
     </string-array>
+
+    <string-array name="lang">
+        <item name="en">English</item>
+        <item name="gr">Ελληνικά</item>
+    </string-array>
+    <string-array name="langValues">
+        <item name="en">en</item>
+        <item name="gr">gr</item>
+    </string-array>
+
+    <string-array name="units">
+        <item name="ml">Miles</item>
+        <item name="km">KilometRa</item>
+    </string-array>
+    <string-array name="unitsValues">
+        <item name="ml">ml</item>
+        <item name="km">km</item>
+    </string-array>
 </resources>
