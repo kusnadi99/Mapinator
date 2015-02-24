@@ -9,7 +9,8 @@ import com.google.android.gms.maps.model.LatLng;
  */
 public class marker {
     private long id;
-    private String title, description, category;
+    private String title, description;
+    private int category;
     private double latitude, longitude;
 
     // To prevent someone from accidentally instantiating the contract class,
@@ -51,11 +52,11 @@ public class marker {
         this.description = description;
     }
 
-    public String getCategory() {
+    public int getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(int category) {
         this.category = category;
     }
 

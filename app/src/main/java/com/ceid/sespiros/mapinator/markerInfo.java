@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -18,7 +19,8 @@ import com.google.android.gms.maps.model.LatLng;
  */
 public class markerInfo extends DialogFragment {
     LatLng latlng;
-    String title, desc, category;
+    String title, desc;
+    Long category;
     View layout;
 
     /**
@@ -59,14 +61,20 @@ public class markerInfo extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
                         title = ((EditText) layout.findViewById(R.id.editTitle))
                                 .getText().toString();
-                        desc = ((EditText) layout.findViewById(R.id.editDescription))
-                                .getText().toString();
-                        category = ((Spinner) layout.findViewById(R.id.spinner))
-                                .getSelectedItem().toString();
-                        latlng = getArguments().getParcelable("latlng");
+                        if (!title.equals("")) {
+                            desc = ((EditText) layout.findViewById(R.id.editDescription))
+                                    .getText().toString();
+                            category = ((Spinner) layout.findViewById(R.id.spinner))
+                                    .getSelectedItemId();
+                            latlng = getArguments().getParcelable("latlng");
 
-                        ((MainActivity)getActivity()).doPositiveClick(title, desc, category, latlng);
+                            ((MainActivity) getActivity()).doPositiveClick(title, desc, category, latlng);
+                        } else {
+                            Toast toast = Toast.makeText(getActivity(), "Please fill a name", Toast.LENGTH_LONG);
+                            toast.show();
+                        }
                     }
+
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
@@ -77,5 +85,4 @@ public class markerInfo extends DialogFragment {
         // Create the AlertDialog object and return it
         return builder.create();
     }
-
 }

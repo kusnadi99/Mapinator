@@ -22,7 +22,7 @@ public class MarkerDbHelper extends SQLiteOpenHelper {
                     marker.MarkerEntry._ID + " INTEGER PRIMARY KEY," +
                     marker.MarkerEntry.COLUMN_NAME_TITLE + " TEXT," +
                     marker.MarkerEntry.COLUMN_NAME_DESC + " TEXT," +
-                    marker.MarkerEntry.COLUMN_NAME_CATEGORY + " TEXT," +
+                    marker.MarkerEntry.COLUMN_NAME_CATEGORY + " LONG," +
                     marker.MarkerEntry.COLUMN_NAME_LATITUDE + " DECIMAL(10,7)," +
                     marker.MarkerEntry.COLUMN_NAME_LONGITUDE + " DECIMAL(10,7))";
 

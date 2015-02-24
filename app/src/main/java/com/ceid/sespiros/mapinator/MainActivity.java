@@ -14,10 +14,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
+import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
 public class MainActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -27,6 +28,7 @@ public class MainActivity extends FragmentActivity {
     SQLiteDatabase db;
     boolean addEnabled = false;
 
+    private float[] markerColours = {HUE_RED,HUE_GREEN,HUE_BLUE,HUE_AZURE};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +73,8 @@ public class MainActivity extends FragmentActivity {
                 return true;
             case R.id.action_clear:
                 mMap.clear();
+                return true;
+            case R.id.action_settings:
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -135,15 +139,16 @@ public class MainActivity extends FragmentActivity {
         Log.d("DEBUG",latlng.toString());
         String title = c.getString(1);
         String description = c.getString(2);
-        String category = c.getString(3);
+        int category = c.getInt(3);
         String snippet = title + description + category + "Click to edit";
 
         mark.setTitle(title);
         mark.setDescription(description);
         mark.setCategory(category);
         mark.setCoordinates(latlng);
+        mark.setCoordinates(latlng);
 
-        return new MarkerOptions().position(latlng).title(title).snippet(snippet);
+        return new MarkerOptions().position(latlng).title(title).snippet(snippet).icon(BitmapDescriptorFactory.defaultMarker(markerColours[category]));
     }
 
     private void showMarkers() {
@@ -158,7 +163,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     void editMarker(LatLng latlng) {
-        if (addEnabled) {
+        if (!addEnabled) {
             editDialog = markerInfo.newInstance(latlng);
             editDialog.show(getFragmentManager(), "edit");
             addEnabled = false;
@@ -169,10 +174,12 @@ public class MainActivity extends FragmentActivity {
         if( mDbHelper.deleteMarker(db, latlng) > 0) {
             Toast toast = Toast.makeText(getApplicationContext(), "Marker deleted successfully", Toast.LENGTH_SHORT);
             toast.show();
+            mMap.clear();
+            showMarkers();
         }
     }
 
-    void doPositiveClick(String title, String desc, String category, LatLng latlng) {
+    void doPositiveClick(String title, String desc, Long category, LatLng latlng) {
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
         values.put(marker.MarkerEntry.COLUMN_NAME_TITLE, title);
@@ -189,7 +196,8 @@ public class MainActivity extends FragmentActivity {
                 values);
 
         Marker info = mMap.addMarker(new MarkerOptions().position(latlng)
-                .title(title).snippet(desc+category+"Click to edit"));
+                .title(title).snippet(desc+getResources().getStringArray(R.array.categories_array)[category.intValue()]+"Click to edit")
+                .icon(BitmapDescriptorFactory.defaultMarker(markerColours[category.intValue()])));
 
         info.showInfoWindow();
     }
