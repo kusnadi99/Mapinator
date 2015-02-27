@@ -1,20 +1,34 @@
 package com.ceid.sespiros.mapinator;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -29,7 +43,8 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity
+        implements directionInfo.NoticeDialogListener{
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private DialogFragment editDialog;
@@ -38,6 +53,9 @@ public class MainActivity extends FragmentActivity {
     MarkerDbHelper mDbHelper;
     SQLiteDatabase db;
     boolean addEnabled = false;
+    LocationManager mLocationManager;
+    Location mLocation;
+    String mAddress;
 
     private float[] markerColours = {HUE_RED,HUE_GREEN,HUE_BLUE,HUE_AZURE};
     @Override
@@ -50,6 +68,26 @@ public class MainActivity extends FragmentActivity {
         db = mDbHelper.getReadableDatabase();
 
         setUpMapIfNeeded();
+
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30,
+                100, mLocationListener);
+
+    }
+
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onDialogLocationClick(DialogFragment dialog, EditText edit, ImageButton btn) {
+        // User touched the dialog's positive button
+        if (edit.getText().toString().isEmpty()) {
+            mLocation = mLocationManager.getLastKnownLocation(mLocationManager.getAllProviders().get(0));
+            getAddress(btn, mLocation);
+        } else {
+            mAddress = edit.getText().toString();
+            getLocation(btn, mAddress);
+        }
     }
 
     @Override
@@ -158,83 +196,6 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
-    public void getAddress(LatLng point) {
-        /*
-         * Reverse geocoding is long-running and synchronous.
-         * Run it on a background thread.
-         * Pass the current location to the background task.
-         * When the task finishes,
-         * onPostExecute() displays the address.
-         */
-
-        (new GetAddressTask(this)).execute(point);
-    }
-
-    private class GetAddressTask extends AsyncTask<LatLng, Void, String> {
-        Context mContext;
-
-        public GetAddressTask(Context context) {
-            super();
-            mContext = context;
-        }
-
-        /**
-         * Get a Geocoder instance, get the latitude and longitude
-         * look up the address, and return it
-         *
-         * @return A string containing the address of the current
-         * location, or an empty string if no address can be found,
-         * or an error message
-         * @params params One or more Location objects
-         */
-        @Override
-        protected String doInBackground(LatLng... params) {
-            Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
-
-            // Get the current location from the input parameter list
-            // Create a list to contain the result address
-            List<Address> addresses = null;
-            try {
-                addresses = geocoder.getFromLocation(params[0].latitude, params[0].longitude, 1);
-            } catch (IOException e1) {
-                Log.e("LocationSampleActivity", "IO Exception in getFromLocation()");
-                e1.printStackTrace();
-                return ("IO Exception trying to get address");
-            } catch (IllegalArgumentException e2) {
-                // Error message to post in the log
-                String errorString = "Illegal arguments " + Double.toString(params[0].latitude) +
-                        " , " + Double.toString(params[0].longitude) + " passed to address service";
-                Log.e("LocationSampleActivity", errorString);
-                e2.printStackTrace();
-                return errorString;
-            }
-            // If the reverse geocode returned an address
-            if (addresses != null && addresses.size() > 0) {
-                // Get the first address
-                Address address = addresses.get(0);
-                /*
-                 * Format the first line of address (if available),
-                 * city, and country name.
-                 */
-                String addressText = String.format(
-                        "%s, %s, %s",
-                        address.getMaxAddressLineIndex() > 0 ? address.getAddressLine(0) : "",
-                        address.getLocality(),
-                        address.getCountryName());
-                // Return the text
-                return addressText;
-            } else {
-                return "No address found";
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String address) {
-            // Display the results of the lookup.
-            Toast.makeText(getApplicationContext(), address, Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private MarkerOptions markerToMarkerOptions(Cursor c) {
         marker mark = new marker();
         LatLng latlng = new LatLng(c.getDouble(4), c.getDouble(5));
@@ -309,4 +270,204 @@ public class MainActivity extends FragmentActivity {
         info.showInfoWindow();
     }
 
+    private class GetLocationTask extends
+            AsyncTask<String, Void, Address> {
+        Context mContext;
+
+        public GetLocationTask(Context context) {
+            super();
+            mContext = context;
+        }
+
+        /**
+         * Get a Geocoder instance, get the latitude and longitude
+         * look up the address, and return it
+         *
+         * @return A string containing the address of the current
+         * location, or an empty string if no address can be found,
+         * or an error message
+         * @params params One or more Location objects
+         */
+        @Override
+        protected Address doInBackground(String... params) {
+            Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
+            // Get the current location from the input parameter list
+            String addr = params[0];
+            Address address = new Address(Locale.ENGLISH);
+            // Create a list to contain the result address
+            List<Address> addresses = null;
+            try {
+                /*
+                 * Return 1 address.
+                 */
+                addresses = geocoder.getFromLocationName(addr, 1);
+            } catch (IOException e1) {
+                Log.e("LocationSampleActivity",
+                        "IO Exception in getFromLocationName()");
+                e1.printStackTrace();
+            } catch (IllegalArgumentException e2) {
+                // Error message to post in the log
+                String errorString = "Illegal arguments " + addr
+                        + " passed to address service";
+                Log.e("LocationSampleActivity", errorString);
+                e2.printStackTrace();
+            }
+            // If the reverse geocode returned an address
+            if (addresses != null && addresses.size() > 0) {
+                // Get the first address
+                address = addresses.get(0);
+                return address;
+            } else
+                return address;
+        }
+        /**
+         * A method that's called once doInBackground() completes. Turn
+         * off the indeterminate activity indicator and set
+         * the text of the UI element that shows the address. If the
+         * lookup failed, display the error message.
+         */
+        @Override
+        protected void onPostExecute(Address address) {
+            // Display the results of the lookup.
+            //searchTweets(address);
+        }
+    }
+
+    private class GetAddressTask extends AsyncTask<LatLng, Void, String> {
+        Context mContext;
+
+        public GetAddressTask(Context context) {
+            super();
+            mContext = context;
+        }
+
+        /**
+         * Get a Geocoder instance, get the latitude and longitude
+         * look up the address, and return it
+         *
+         * @return A string containing the address of the current
+         * location, or an empty string if no address can be found,
+         * or an error message
+         * @params params One or more Location objects
+         */
+        @Override
+        protected String doInBackground(LatLng... params) {
+            Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
+
+            // Get the current location from the input parameter list
+            // Create a list to contain the result address
+            List<Address> addresses = null;
+            try {
+                addresses = geocoder.getFromLocation(params[0].latitude, params[0].longitude, 1);
+            } catch (IOException e1) {
+                Log.e("LocationSampleActivity", "IO Exception in getFromLocation()");
+                e1.printStackTrace();
+                return ("IO Exception trying to get address");
+            } catch (IllegalArgumentException e2) {
+                // Error message to post in the log
+                String errorString = "Illegal arguments " + Double.toString(params[0].latitude) +
+                        " , " + Double.toString(params[0].longitude) + " passed to address service";
+                Log.e("LocationSampleActivity", errorString);
+                e2.printStackTrace();
+                return errorString;
+            }
+            // If the reverse geocode returned an address
+            if (addresses != null && addresses.size() > 0) {
+                // Get the first address
+                Address address = addresses.get(0);
+                /*
+                 * Format the first line of address (if available),
+                 * city, and country name.
+                 */
+                String addressText = String.format(
+                        "%s, %s, %s",
+                        address.getMaxAddressLineIndex() > 0 ? address.getAddressLine(0) : "",
+                        address.getLocality(),
+                        address.getCountryName());
+                // Return the text
+                return addressText;
+            } else {
+                return "No address found";
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String address) {
+            // Display the results of the lookup.
+            Toast.makeText(getApplicationContext(), address, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void getLocation(View v, String mAddress) {
+        /*
+         * Reverse geocoding is long-running and synchronous.
+         * Run it on a background thread.
+         * Pass the current location to the background task.
+         * When the task finishes,
+         * onPostExecute() displays the address.
+        */
+        (new GetLocationTask(this)).execute(mAddress);
+    }
+
+    /**
+     * The "Get Address" button in the UI is defined with
+     * android:onClick="getAddress". The method is invoked whenever the
+     * user clicks the button.
+     *
+     * @param v The view object associated with this method,
+     * in this case a Button.
+     */
+    public void getAddress(View v, Location mLocation) {
+        // Ensure that a Geocoder services is available
+        if (Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.GINGERBREAD
+                &&
+                Geocoder.isPresent()) {
+            /*
+             * Reverse geocoding is long-running and synchronous.
+             * Run it on a background thread.
+             * Pass the current location to the background task.
+             * When the task finishes,
+             * onPostExecute() displays the address.
+             */
+            LatLng latlng = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
+            (new GetAddressTask(this)).execute(latlng);
+        }
+    }
+
+    public void getAddress(LatLng point) {
+        /*
+         * Reverse geocoding is long-running and synchronous.
+         * Run it on a background thread.
+         * Pass the current location to the background task.
+         * When the task finishes,
+         * onPostExecute() displays the address.
+         */
+
+        (new GetAddressTask(this)).execute(point);
+    }
+
+
+    private final LocationListener mLocationListener = new LocationListener() {
+
+        @Override
+        public void onLocationChanged(final Location location) {
+            mLocation = location;
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
 }

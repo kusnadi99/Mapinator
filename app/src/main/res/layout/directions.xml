@@ -15,7 +15,7 @@
         <EditText
             android:layout_width="176dp"
             android:layout_height="match_parent"
-            android:id="@+id/editTitle"
+            android:id="@+id/editStart"
             android:hint="@string/start"
             android:layout_weight="1.06" />
 
@@ -30,7 +30,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/editDescription"
+        android:id="@+id/editDestination"
         android:layout_gravity="center_horizontal"
         android:hint="@string/destination"
         android:layout_marginLeft="20dp"
