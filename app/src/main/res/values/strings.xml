@@ -11,8 +11,12 @@
     <string name="action_showmarkers">Show markers</string>
     <string name="action_clear">Clear map</string>
     <string name="action_settings">Settings</string>
-    <string name="add_title">Add a title</string>
-    <string name="add_description">Add a description</string>
+    <string name="add_title">Title</string>
+    <string name="add_description">Description</string>
+    <string name="start">Starting point</string>
+    <string name="destination">Destination</string>
+
+
 
     <string-array
         name="options_array">

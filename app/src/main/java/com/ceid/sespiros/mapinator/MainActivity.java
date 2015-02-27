@@ -34,6 +34,7 @@ public class MainActivity extends FragmentActivity {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private DialogFragment editDialog;
     private DialogFragment dialog;
+    private DialogFragment directionDialog;
     MarkerDbHelper mDbHelper;
     SQLiteDatabase db;
     boolean addEnabled = false;
@@ -88,6 +89,10 @@ public class MainActivity extends FragmentActivity {
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, SetPreferenceActivity.class);
                 startActivityForResult(intent, 0);
+                return true;
+            case R.id.action_recv:
+                directionDialog = directionInfo.newInstance();
+                directionDialog.show(getFragmentManager(), "edit");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
