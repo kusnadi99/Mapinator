@@ -4,7 +4,7 @@
 
     <PreferenceCategory
 
-        android:title="First Category"
+        android:title="Directions API options"
 
         android:key="first_category">
 

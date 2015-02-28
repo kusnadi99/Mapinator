@@ -4,6 +4,7 @@
     <string name="app_name">Mapinator</string>
     <string name="hello_world">Hello world!</string>
     <string name="dialog_title">Edit marker options</string>
+    <string name="dialog2_title">Directions</string>
     <string name="okey">OK</string>
     <string name="cancel">Cancel</string>
     <string name="action_add">Add marker</string>
@@ -35,19 +36,20 @@
 
     <string-array name="lang">
         <item name="en">English</item>
-        <item name="gr">Ελληνικά</item>
+        <item name="el">Ελληνικά</item>
     </string-array>
     <string-array name="langValues">
         <item name="en">en</item>
-        <item name="gr">gr</item>
+        <item name="el">el</item>
     </string-array>
 
     <string-array name="units">
         <item name="ml">Miles</item>
-        <item name="km">KilometRa</item>
+        <item name="km">Kilometers</item>
     </string-array>
     <string-array name="unitsValues">
         <item name="ml">ml</item>
         <item name="km">km</item>
     </string-array>
+    <string name="title_activity_directions">Directions</string>
 </resources>

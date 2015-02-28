@@ -1,12 +1,10 @@
 package com.ceid.sespiros.mapinator;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
@@ -17,16 +15,13 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -37,27 +32,51 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.Key;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.prefs.Preferences;
 
 import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
 public class MainActivity extends FragmentActivity
-        implements directionInfo.NoticeDialogListener{
+        implements directionInfo.DirectionDialogListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private DialogFragment editDialog;
     private DialogFragment dialog;
     private DialogFragment directionDialog;
+    directionInfo.DirectionsResult directionsResult;
     MarkerDbHelper mDbHelper;
     SQLiteDatabase db;
     boolean addEnabled = false;
     LocationManager mLocationManager;
     Location mLocation;
     String mAddress;
+    EditText edit;
 
     private float[] markerColours = {HUE_RED,HUE_GREEN,HUE_BLUE,HUE_AZURE};
+
+    HttpResponse httpResponse;
+
+    static final HttpTransport HTTP_TRANSPORT = AndroidHttp.newCompatibleTransport();
+    static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    HttpRequestFactory requestFactory;
+    SharedPreferences prefs;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,17 +92,33 @@ public class MainActivity extends FragmentActivity
         mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30,
                 100, mLocationListener);
 
+        requestFactory = HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) {
+                request.setParser(new JsonObjectParser(JSON_FACTORY));
+            }
+        });
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
     }
 
     // The dialog fragment receives a reference to this Activity through the
     // Fragment.onAttach() callback, which it uses to call the following methods
-    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    // defined by the directionInfo.DirectionDialogListener interface
     @Override
     public void onDialogLocationClick(DialogFragment dialog, EditText edit, ImageButton btn) {
+        // Pass the editText to global in order to change text in async getaddresstask
+        this.edit = edit;
         // User touched the dialog's positive button
         if (edit.getText().toString().isEmpty()) {
-            mLocation = mLocationManager.getLastKnownLocation(mLocationManager.getAllProviders().get(0));
-            getAddress(btn, mLocation);
+            if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                mLocation = mLocationManager.getLastKnownLocation(mLocationManager.getAllProviders().get(0));
+                getAddress(btn, mLocation);
+            } else {
+                Toast toast = Toast.makeText(getApplicationContext(), "Turn on Location", Toast.LENGTH_LONG);
+                toast.show();
+            }
         } else {
             mAddress = edit.getText().toString();
             getLocation(btn, mAddress);
@@ -162,12 +197,12 @@ public class MainActivity extends FragmentActivity
             if (mMap != null) {
                 setUpMap();
             }
+            mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMapToolbarEnabled(false);
         }
     }
 
     /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
      * <p/>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
@@ -264,7 +299,7 @@ public class MainActivity extends FragmentActivity
                 values);
 
         Marker info = mMap.addMarker(new MarkerOptions().position(latlng)
-                .title(title).snippet(desc+getResources().getStringArray(R.array.categories_array)[category.intValue()]+"Click to edit")
+                .title(title).snippet(desc + "\nClick to edit")
                 .icon(BitmapDescriptorFactory.defaultMarker(markerColours[category.intValue()])));
 
         info.showInfoWindow();
@@ -395,6 +430,8 @@ public class MainActivity extends FragmentActivity
         protected void onPostExecute(String address) {
             // Display the results of the lookup.
             Toast.makeText(getApplicationContext(), address, Toast.LENGTH_SHORT).show();
+            if (edit != null)
+                edit.setText(address);
         }
     }
 
@@ -470,4 +507,70 @@ public class MainActivity extends FragmentActivity
 
         }
     };
+
+    private class DirectionsFetcher extends AsyncTask<String, Integer, String> {
+        protected String doInBackground(String... urls) {
+            try {
+                HttpRequestFactory requestFactory = HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                    @Override
+                    public void initialize(HttpRequest request) {
+                        request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    }
+                });
+
+                GenericUrl url = new GenericUrl("https://maps.googleapis.com/maps/api/directions/json");
+                url.put("origin", urls[0]);
+                url.put("destination", urls[1]);
+                url.put("mode", urls[2]);
+                url.put("key", getResources().getText(R.string.google_maps_key));
+
+                url.put("language", prefs.getString("lang", "en"));
+                url.put("units", prefs.getString("units", "km"));
+
+                HttpRequest request = requestFactory.buildGetRequest(url);
+                httpResponse = request.execute();
+                directionsResult = httpResponse.parseAs(directionInfo.DirectionsResult.class);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+        }
+
+        protected void onPostExecute(String result) {
+            directionInfo.Route route = directionsResult.routes.get(0);
+            List<directionInfo.Leg> legs = route.legs;
+            directionInfo.Leg leg;
+            ArrayList<String> instructions = new ArrayList<String>();
+            ArrayList<LatLng> latLngs = new ArrayList<LatLng>();
+
+            Iterator<directionInfo.Leg> LegIterator = legs.iterator();
+            while (LegIterator.hasNext()) {
+                leg = LegIterator.next();
+                Iterator<directionInfo.Step> StepIterator = leg.steps.iterator();
+                while (StepIterator.hasNext()) {
+                    directionInfo.Step step = StepIterator.next();
+                    instructions.add(step.instruction);
+                    instructions.add("");
+                }
+            }
+
+            Intent intent = new Intent();
+            intent.setClass(MainActivity.this, DirectionsActivity.class);
+
+            String encodedPoints = route.overviewPolyLine.points;
+            intent.putExtra("encodedPoints", encodedPoints);
+            intent.putExtra("instructions", instructions);
+            intent.putExtra("latLngs", latLngs);
+
+            startActivityForResult(intent, 0);
+        }
+    }
+
+    public void getDirections(String origin, String destination, String mode) {
+        (new DirectionsFetcher()).execute(origin, destination, mode);
+    }
 }

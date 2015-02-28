@@ -43,30 +43,28 @@
         android:layout_weight="0.12"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="20dp"
+        android:id="@+id/radio">
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Foot"
-            android:id="@+id/radioButton"
+            android:text="Driving"
+            android:id="@+id/driving"
             android:layout_weight="0.12" />
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Car"
-            android:id="@+id/radioButton2"
+            android:text="Walking"
+            android:id="@+id/walking"
             android:layout_weight="0.12" />
 
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bike"
-            android:id="@+id/radioButton3"
+            android:text="Bicycling"
+            android:id="@+id/bicycling"
             android:layout_weight="0.12" />
     </RadioGroup>
-
-    s
-
 </LinearLayout>
