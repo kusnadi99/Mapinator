@@ -371,7 +371,7 @@ public class MainActivity extends FragmentActivity
                 null,
                 values);
 
-        Marker info = mMap.addMarker(new MarkerOptions().position(latlng).
+        Marker info = mMap.addMarker(new MarkerOptions().position(latlng)
                 .title(title).snippet(desc + "\nClick to edit")
                 .icon(BitmapDescriptorFactory.defaultMarker(markerColours[category.intValue()])));
 
