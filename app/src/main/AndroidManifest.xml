@@ -44,6 +44,9 @@
             android:label="@string/title_activity_directions"
             android:parentActivityName=".MainActivity">
         </activity>
+        <meta-data
+            android:name="com.crashlytics.ApiKey"
+            android:value="<YOUR CRASHLYTICS API_KEY>" />
     </application>
 
 </manifest>

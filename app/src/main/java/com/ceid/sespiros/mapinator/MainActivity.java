@@ -44,16 +44,27 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Key;
 
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import io.fabric.sdk.android.Fabric;
+import com.twitter.sdk.android.tweetcomposer.TweetComposer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.prefs.Preferences;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
 public class MainActivity extends FragmentActivity
-        implements directionInfo.DirectionDialogListener, markerOptions.DirectionDialogMarkerListener,  directionInfo.DirectionLocListener {
+        implements directionInfo.DirectionDialogListener, markerOptions.DirectionDialogMarkerListener,
+                    directionInfo.DirectionLocListener, markerOptions.TwitterListener {
+
+    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    private static final String TWITTER_KEY = "<YOUR TWITTER_KEY>";
+    private static final String TWITTER_SECRET = "<YOUR TWITTER_SECRET>";
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private DialogFragment editDialog;
@@ -67,6 +78,7 @@ public class MainActivity extends FragmentActivity
     Location mLocation;
     String mAddress;
     EditText edit;
+    GetAddressTask task;
 
     private float[] markerColours = {HUE_RED,HUE_GREEN,HUE_BLUE,HUE_AZURE};
 
@@ -80,7 +92,11 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Twitter(authConfig));
         setContentView(R.layout.activity_main);
+
+        Fabric.with(this, new TweetComposer());
 
         // Get a handle on the database maybe needed in resume etc
         mDbHelper = new MarkerDbHelper(this);
@@ -153,6 +169,34 @@ public class MainActivity extends FragmentActivity
         directionDialog.show(getFragmentManager(), "edit");
     }
 
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the markerOptions.twitterListener interface
+    @Override
+    public void onTweet(DialogFragment dialog, LatLng latlng) {
+        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            mLocation = mLocationManager.getLastKnownLocation(mLocationManager.getAllProviders().get(0));
+            getAddress(latlng);
+        } else {
+            Toast toast = Toast.makeText(getApplicationContext(), "Turn on Location", Toast.LENGTH_LONG);
+            toast.show();
+        }
+
+        try {
+            task.get(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
+        TweetComposer.Builder builder = new TweetComposer.Builder(this)
+                .text("I am at ("+latlng.latitude+","+latlng.longitude+") #mapinator");
+
+        builder.show();
+    }
 
     @Override
     protected void onResume() {
@@ -327,7 +371,7 @@ public class MainActivity extends FragmentActivity
                 null,
                 values);
 
-        Marker info = mMap.addMarker(new MarkerOptions().position(latlng)
+        Marker info = mMap.addMarker(new MarkerOptions().position(latlng).
                 .title(title).snippet(desc + "\nClick to edit")
                 .icon(BitmapDescriptorFactory.defaultMarker(markerColours[category.intValue()])));
 
@@ -393,7 +437,6 @@ public class MainActivity extends FragmentActivity
         @Override
         protected void onPostExecute(Address address) {
             // Display the results of the lookup.
-            //searchTweets(address);
         }
     }
 
@@ -509,8 +552,8 @@ public class MainActivity extends FragmentActivity
          * When the task finishes,
          * onPostExecute() displays the address.
          */
-
-        (new GetAddressTask(this)).execute(point);
+        task = new GetAddressTask(this);
+        task.execute(point);
     }
 
 

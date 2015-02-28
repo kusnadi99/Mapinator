@@ -24,7 +24,7 @@
         <item>Delete</item>
         <item>Edit</item>
         <item>Receive Instructions</item>
-        <item>Share on Facebook</item>
+        <item>Share on Twitter</item>
     </string-array>
 
     <string-array name="categories_array">
