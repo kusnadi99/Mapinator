@@ -53,7 +53,7 @@ import java.util.prefs.Preferences;
 
 import static com.google.android.gms.maps.model.BitmapDescriptorFactory.*;
 public class MainActivity extends FragmentActivity
-        implements directionInfo.DirectionDialogListener {
+        implements directionInfo.DirectionDialogListener, markerOptions.DirectionDialogMarkerListener,  directionInfo.DirectionLocListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private DialogFragment editDialog;
@@ -124,6 +124,35 @@ public class MainActivity extends FragmentActivity
             getLocation(btn, mAddress);
         }
     }
+
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the directionInfo.DirectionLocListener interface
+    @Override
+    public void onDialogGetLocClick(DialogFragment dialog, EditText edit, LatLng latlng) {
+        // Pass the editText to global in order to change text in async getaddresstask
+        this.edit = edit;
+        // User touched the dialog's positive button
+        if (edit.getText().toString().isEmpty()) {
+            if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                mLocation = mLocationManager.getLastKnownLocation(mLocationManager.getAllProviders().get(0));
+                getAddress(latlng);
+            } else {
+                Toast toast = Toast.makeText(getApplicationContext(), "Turn on Location", Toast.LENGTH_LONG);
+                toast.show();
+            }
+        }
+    }
+
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the markerOptions.DirectionDialogMarkerListener interface
+    @Override
+    public void onDialogRecvClick(DialogFragment dialog, LatLng latlng) {
+        directionDialog = directionInfo.newInstance(latlng);
+        directionDialog.show(getFragmentManager(), "edit");
+    }
+
 
     @Override
     protected void onResume() {

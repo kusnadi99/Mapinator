@@ -71,9 +71,16 @@ public class directionInfo extends DialogFragment {
     public interface DirectionDialogListener {
         public void onDialogLocationClick(DialogFragment dialog, EditText edit, ImageButton btn);
     }
+    /* The activity that creates an instance of this dialog fragment must
+     * implement this interface in order to receive event callbacks.
+     * Each method passes the DialogFragment in case the host needs to query it. */
+    public interface DirectionLocListener {
+        public void onDialogGetLocClick(DialogFragment dialog, EditText edit, LatLng latlng);
+    }
 
     // Use this instance of the interface to deliver action events
     DirectionDialogListener mListener;
+    DirectionLocListener mListener2;
 
     // Override the Fragment.onAttach() method to instantiate the DirectionDialogListener
     @Override
@@ -88,12 +95,22 @@ public class directionInfo extends DialogFragment {
             throw new ClassCastException(activity.toString()
                     + " must implement DirectionDialogListener");
         }
+        // Verify that the host activity implements the callback interface
+        try {
+            // Instantiate the DirectionDialogListener so we can send events to the host
+            mListener2 = (DirectionLocListener) activity;
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(activity.toString()
+                    + " must implement DirectionDialogListener");
+        }
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
@@ -102,6 +119,11 @@ public class directionInfo extends DialogFragment {
         btn = (ImageButton) layout.findViewById(R.id.button);
         edit = (EditText) layout.findViewById(R.id.editStart);
         edit2 = (EditText) layout.findViewById(R.id.editDestination);
+
+        if (getArguments() != null) {
+            LatLng latlng = getArguments().getParcelable("latlng");
+            mListener2.onDialogGetLocClick(directionInfo.this, edit2, latlng);
+        }
         means = (RadioGroup) layout.findViewById(R.id.radio);
         choice = means.getCheckedRadioButtonId();
         btn.setOnClickListener(new View.OnClickListener() {
