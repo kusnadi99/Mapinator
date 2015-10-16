@@ -5,3 +5,6 @@
 .DS_Store
 /build
 bower_components
+google-http-java-client
+passwords.txt
+.git.bfg-report
